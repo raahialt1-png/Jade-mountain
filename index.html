@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Updated Viewport for iPhone Notch Support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Jade Mountain Academy</title>
+    
+    <!-- PWA / App Mode Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#064e3b">
+    <link rel="apple-touch-icon" href="https://static.wikia.nocookie.net/wingsoffire/images/5/53/Tsunami_Graphic_Novel.png">
+    
+    <!-- Manifest for "Actual Download" behavior on Android/Desktop -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkphZGUgTW91bnRhaW4gQWNhZGVteSIsCiAgInNob3J0X25hbWUiOiAiSk1BIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwNjRlM2IiLAogICJ0aGVtZV9jb2xvciI6ICIjMDY0ZTNiIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9zdGF0aWMud2lraWEubm9jb29raWUubmV0L3dpbmdzb2ZmaXJlL2ltYWdlcy81LzUzL1RzdW5hbWlfR3JhcGhpY19Ob3ZlbC5wbmciLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- JotForm Embed Handler -->
+    <script src='https://cdn.jotfor.ms/s/umd/00294e3ed83/for-form-embed-handler.js'></script>
+    
+    <style>
+        /* Custom animations */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(5%); }
+        }
+        .animate-bounce-slow {
+            animation: bounce-slow 3s infinite ease-in-out;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 0; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .target-appear {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        /* App-Like Behavior CSS */
+        html, body {
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+            overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
+        }
+        
+        input {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        /* Safe Area Padding for iPhone X+ */
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-950 via-stone-900 to-emerald-900 text-stone-100 h-screen overflow-hidden font-sans">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- ICON COMPONENTS ---
+        const IconWrapper = ({ children, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+        const Icons = {
+            Scroll: (p) => <IconWrapper {...p}><path d="M8 2h2v20H8z"/><path d="M14 2h2v20h-2z"/><path d="M8 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2"/></IconWrapper>,
+            Map: (p) => <IconWrapper {...p}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></IconWrapper>,
+            Users: (p) => <IconWrapper {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconWrapper>,
+            MessageCircle: (p) => <IconWrapper {...p}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></IconWrapper>,
+            Flame: (p) => <IconWrapper {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.4-1.1 1-2.2 2-3 .5.9.9 1.8.9 2.8z"/></IconWrapper>,
+            Droplets: (p) => <IconWrapper {...p}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></IconWrapper>,
+            Wind: (p) => <IconWrapper {...p}><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></IconWrapper>,
+            Mountain: (p) => <IconWrapper {...p}><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></IconWrapper>,
+            Snowflake: (p) => <IconWrapper {...p}><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></IconWrapper>,
+            Sun: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></IconWrapper>,
+            Moon: (p) => <IconWrapper {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></IconWrapper>,
+            BookOpen: (p) => <IconWrapper {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>,
+            Utensils: (p) => <IconWrapper {...p}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconWrapper>,
+            Home: (p) => <IconWrapper {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>,
+            Menu: (p) => <IconWrapper {...p}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></IconWrapper>,
+            X: (p) => <IconWrapper {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconWrapper>,
+            Send: (p) => <IconWrapper {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></IconWrapper>,
+            Sparkles: (p) => <IconWrapper {...p}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M3 7v2"/><path d="M7 9H3"/></IconWrapper>,
+            Video: (p) => <IconWrapper {...p}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></IconWrapper>,
+            Mic: (p) => <IconWrapper {...p}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></IconWrapper>,
+            MicOff: (p) => <IconWrapper {...p}><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></IconWrapper>,
+            PhoneOff: (p) => <IconWrapper {...p}><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/><line x1="23" y1="1" x2="1" y2="23"/></IconWrapper>,
+            VideoOff: (p) => <IconWrapper {...p}><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10"/><line x1="1" y1="1" x2="23" y2="23"/></IconWrapper>,
+            GraduationCap: (p) => <IconWrapper {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></IconWrapper>,
+            History: (p) => <IconWrapper {...p}><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/></IconWrapper>,
+            LogOut: (p) => <IconWrapper {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></IconWrapper>,
+            PhoneCall: (p) => <IconWrapper {...p}><path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></IconWrapper>,
+            Glasses: (p) => <IconWrapper {...p}><circle cx="6" cy="12" r="4"/><circle cx="18" cy="12" r="4"/><line x1="10" y1="12" x2="14" y2="12"/></IconWrapper>,
+            Crown: (p) => <IconWrapper {...p}><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></IconWrapper>,
+            Zap: (p) => <IconWrapper {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></IconWrapper>,
+            Flower: (p) => <IconWrapper {...p}><path d="M12 2a3 3 0 0 0-3 3c0 1.66 1.34 3 3 3s3-1.34 3-3a3 3 0 0 0-3-3z"/><path d="M19 9a3 3 0 0 0-3-3c-1.66 0-3 1.34-3 3s1.34 3 3 3a3 3 0 0 0 3-3z"/><path d="M12 16a3 3 0 0 0-3-3c0-1.66 1.34-3 3-3s3 1.34 3 3a3 3 0 0 0-3 3z"/><path d="M5 9a3 3 0 0 0-3-3c-1.66 0-3 1.34-3 3s1.34 3 3 3a3 3 0 0 0 3-3z"/><circle cx="12" cy="9" r="2"/><path d="M12 18v4"/><path d="M12 20c-2 0-3-1-3-3"/></IconWrapper>,
+            Swords: (p) => <IconWrapper {...p}><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="2" y1="19" x2="4" y2="21"/></IconWrapper>,
+            Palette: (p) => <IconWrapper {...p}><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></IconWrapper>,
+            Crosshair: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></IconWrapper>,
+            Ear: (p) => <IconWrapper {...p}><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 0 4 0v-1z"/></IconWrapper>,
+            Download: (p) => <IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconWrapper>,
+            Shield: (p) => <IconWrapper {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></IconWrapper>
+        };
+
+        // --- DATA ---
+        const TRIBES = [
+            { id: 'mud', name: 'MudWing', color: 'bg-amber-800', textColor: 'text-amber-900', icon: Icons.Mountain, description: 'Strong, loyal, and love food.' },
+            { id: 'sea', name: 'SeaWing', color: 'bg-cyan-600', textColor: 'text-cyan-800', icon: Icons.Droplets, description: 'Aquatic, can breathe underwater.' },
+            { id: 'sky', name: 'SkyWing', color: 'bg-red-600', textColor: 'text-red-800', icon: Icons.Wind, description: 'Fast fliers and powerful fighters.' },
+            { id: 'ice', name: 'IceWing', color: 'bg-slate-200', textColor: 'text-slate-600', icon: Icons.Snowflake, description: 'Can withstand subzero temps and exhale frostbreath.' },
+            { id: 'rain', name: 'RainWing', color: 'bg-emerald-500', textColor: 'text-emerald-800', icon: Icons.Sparkles, description: 'Camouflage scales and magical venom.' },
+            { id: 'sand', name: 'SandWing', color: 'bg-yellow-400', textColor: 'text-yellow-800', icon: Icons.Sun, description: 'Poisonous tail barb and fire breath.' },
+            { id: 'night', name: 'NightWing', color: 'bg-indigo-900', textColor: 'text-indigo-200', icon: Icons.Moon, description: 'Mind readers and prophets (sometimes).' },
+        ];
+
+        const ACCESSORIES = [
+            { id: 'none', name: 'None', icon: null },
+            { id: 'glasses', name: 'Glasses', icon: Icons.Glasses },
+            { id: 'crown', name: 'Crown', icon: Icons.Crown },
+            { id: 'scar', name: 'Scar', icon: Icons.Zap },
+            { id: 'flower', name: 'Flower', icon: Icons.Flower }
+        ];
+
+        const EYE_COLORS = [
+            { id: 'black', name: 'Black', hex: '#000000' },
+            { id: 'blue', name: 'Blue', hex: '#3b82f6' },
+            { id: 'green', name: 'Green', hex: '#22c55e' },
+            { id: 'amber', name: 'Amber', hex: '#f59e0b' },
+            { id: 'purple', name: 'Purple', hex: '#a855f7' },
+            { id: 'red', name: 'Red', hex: '#ef4444' }
+        ];
+
+        const LOCATIONS = [
+            { id: 'great_hall', name: 'Great Hall', icon: Icons.Home, description: 'The main gathering place. Sunlight filters through leaves far above.', bg: 'bg-stone-100' },
+            { id: 'history_cave', name: 'History Cave', icon: Icons.History, description: 'Smells of old scrolls and damp rock. Webs is usually here.', bg: 'bg-stone-200' },
+            { id: 'library', name: 'The Library', icon: Icons.BookOpen, description: 'Scrolls stacked to the ceiling. Starflight is sorting them.', bg: 'bg-amber-50' },
+            { id: 'arena', name: 'The Arena', icon: Icons.Swords, description: 'Practice your fighting skills with Tsunami. Watch out!', bg: 'bg-red-50' },
+            { id: 'art_cave', name: 'Art Cave', icon: Icons.Palette, description: 'A colorful cave filled with paints, berries, and clay.', bg: 'bg-pink-50' },
+            { id: 'prey_center', name: 'Prey Center', icon: Icons.Utensils, description: 'Roasting fires and the smell of delicious cows.', bg: 'bg-orange-50' },
+            { id: 'underground_lake', name: 'Underground Lake', icon: Icons.Droplets, description: 'A cool, dark lake glowing with phosphorescent moss.', bg: 'bg-blue-900 text-white' },
+        ];
+
+        const NPCS = [
+            { 
+                id: 'clay', 
+                role: 'student', 
+                name: 'Clay', 
+                tribe: 'MudWing', 
+                avatarColor: 'bg-amber-700', 
+                personality: ['Hungry', 'Protective', 'Friendly'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/0/02/Clay_GN_Infobox.png/revision/latest?cb=20210617155608',
+                agentUrl: "https://agent.jotform.com/019bd3c38eaf74f1a5d9d739df35de42390e?embedMode=iframe&background=1&shadow=1"
+            },
+            { 
+                id: 'tsunami', 
+                role: 'student', 
+                name: 'Tsunami', 
+                tribe: 'SeaWing', 
+                avatarColor: 'bg-cyan-600', 
+                personality: ['Fierce', 'Princess', 'Leader'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/5/53/Tsunami_Graphic_Novel.png/revision/latest/scale-to-width-down/350?cb=20210217034444',
+                agentUrl: "https://agent.jotform.com/019bd39c7f5472bc968724f259bfdddc2c70?embedMode=iframe&background=1&shadow=1"
+            },
+            { 
+                id: 'glory', 
+                role: 'student', 
+                name: 'Glory', 
+                tribe: 'RainWing', 
+                avatarColor: 'bg-emerald-500', 
+                personality: ['Sarcastic', 'Regal', 'Sharp'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/f/f0/Glory_GN_Infobox.png/revision/latest?cb=20210617155829',
+                agentUrl: null 
+            },
+            { 
+                id: 'starflight', 
+                role: 'student', 
+                name: 'Starflight', 
+                tribe: 'NightWing', 
+                avatarColor: 'bg-indigo-900', 
+                personality: ['Nervous', 'Smart', 'Lecture-y'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/5/5d/Starflight_GN_Infobox.png/revision/latest?cb=20210617160012',
+                agentUrl: null 
+            },
+            { 
+                id: 'sunny', 
+                role: 'student', 
+                name: 'Sunny', 
+                tribe: 'SandWing', 
+                avatarColor: 'bg-yellow-300', 
+                personality: ['Optimistic', 'Happy', 'Peacemaker'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/1/1b/Sunny_GN_Infobox.png/revision/latest?cb=20210617160205',
+                agentUrl: null 
+            },
+            { 
+                id: 'webs', 
+                role: 'teacher', 
+                name: 'Webs', 
+                tribe: 'SeaWing', 
+                avatarColor: 'bg-cyan-800', 
+                personality: ['Anxious', 'Teacher', 'Historian'],
+                avatarImage: 'https://static.wikia.nocookie.net/wingsoffire/images/b/b3/Webs_Graphic_Novel.png/revision/latest?cb=20220205063832',
+                agentUrl: null 
+            },
+        ];
+
+        // --- GAME DATA ---
+        const QUIZ_QUESTIONS = [
+            { question: "Who was the first queen of the SandWings?", options: ["Oasis", "Scorpion", "Burn"], answer: "Oasis" },
+            { question: "What event started the Great War?", options: ["The stealing of the egg", "The death of Queen Oasis", "The scorching"], answer: "The death of Queen Oasis" },
+            { question: "Which tribe can breathe underwater?", options: ["MudWings", "SeaWings", "RainWings"], answer: "SeaWings" },
+            { question: "Who is the librarian at Jade Mountain?", options: ["Tsunami", "Starflight", "Webs"], answer: "Starflight" },
+            { question: "What is a Scavenger?", options: ["A type of bird", "A human", "A lost dragonet"], answer: "A human" }
+        ];
+
+        const SCROLL_TITLES = [
+            { id: 1, title: "The Scorching: A History", category: "History" },
+            { id: 2, title: "Venomous Plants of the Rainforest", category: "Science" },
+            { id: 3, title: "Battle Tactics of the SkyWings", category: "War" },
+            { id: 4, title: "A Guide to Scavengers", category: "Nature" },
+        ];
+
+        // --- HELPER FUNCTIONS ---
+        const getResponse = (npcId, userMessage, location) => {
+            const msg = userMessage.toLowerCase();
+            const responses = {
+                clay: ["Is it lunch time yet? I'm starving!", "Hey! Glad you're in our winglet.", "Do you think they're serving cow today?", "If anyone bothers you, just let me know.", "I found a really cool rock in the river today!"],
+                tsunami: [
+                    "I'm not bossy, I'm the leader. There's a difference, you know!",
+                    "Three moons, let's go do something heroic already! This scroll work is boring.",
+                    "If you need saving, just yell my name. I'll handle the fighting.", 
+                    "Hey! Eyes front! A warrior is always alert.",
+                    "I challenge you to a race in the underground lake. Prepare to lose, Squid-brain!"
+                ],
+                glory: ["Don't stare at my scales. It's rude.", "Training? I don't need training, I have magical death spit.", "Try to keep up, newbie.", "Ugh, Tsunami is being so loud today.", "Are those new scales? Look good."],
+                starflight: ["Actually, according to scroll 42, that's historically inaccurate.", "Have you read the guide to the academy yet?", "Please don't set anything on fire.", "I'm just trying to study... but hello!", "I think I misplaced a scroll somewhere..."],
+                sunny: ["Hi!! Oh wow, your scales are so shiny!", "Isn't Jade Mountain amazing?", "I have a good feeling about our prophecy... er, winglet!", "Let's go explore the moss gardens later!", "Everything is going to be great, I promise!"],
+                webs: ["Class, settle down!", "Please open your scrolls to the Era of the Scorching.", "I hope Riptide is doing okay...", "Do not run in the hallways!", "History is important."]
+            };
+            
+            if (location === 'history_cave' && npcId === 'webs') return "Welcome to History class. Please take a seat.";
+            if (location === 'arena' && npcId === 'tsunami') return "Finally, some action! Don't expect me to go easy on you.";
+            if (location === 'library' && npcId === 'starflight') return "Shhh. This is a quiet zone.";
+            
+            if (msg.includes('food') || msg.includes('eat')) {
+                if (npcId === 'clay') return "Did someone say food?!";
+                if (npcId === 'glory') return "Clay, focus.";
+            }
+            const list = responses[npcId];
+            return list ? list[Math.floor(Math.random() * list.length)] : "Hmm...";
+        };
+
+        const speakText = (text) => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.pitch = 1;
+                utterance.rate = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        // --- SUB-COMPONENTS ---
+        const DragonAvatar = ({ tribe, custom, size = 'md' }) => {
+            const sizeClasses = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-32 h-32' };
+            const iconSizes = { sm: 14, md: 24, lg: 64 };
+            const accIconSizes = { sm: 14, md: 20, lg: 50 };
+            const eyeColor = custom?.eyeColor || '#000000';
+            const AccessoryIcon = ACCESSORIES.find(a => a.id === custom?.accessory)?.icon;
+
+            return (
+                <div className={`${sizeClasses[size]} rounded-full ${tribe.color} relative flex items-center justify-center text-white shadow-md border-2 border-white/20 overflow-hidden`}>
+                    <tribe.icon size={iconSizes[size]} className="opacity-90" />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="flex gap-[8px] mt-[-4px]"> 
+                             {size !== 'sm' && (
+                                <>
+                                 <div style={{ backgroundColor: eyeColor }} className={`rounded-full ${size === 'lg' ? 'w-3 h-3' : 'w-1 h-1'}`}></div>
+                                 <div style={{ backgroundColor: eyeColor }} className={`rounded-full ${size === 'lg' ? 'w-3 h-3' : 'w-1 h-1'}`}></div>
+                                </>
+                             )}
+                        </div>
+                    </div>
+                    {AccessoryIcon && (
+                        <div className="absolute inset-0 flex items-center justify-center text-white/90 drop-shadow-md">
+                           <AccessoryIcon size={accIconSizes[size]} strokeWidth={2.5} />
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const BattleGame = ({ onEnd }) => {
+            const [score, setScore] = useState(0);
+            const [target, setTarget] = useState({ x: 50, y: 50 });
+            const [timeLeft, setTimeLeft] = useState(15);
+            
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setTimeLeft(t => {
+                        if (t <= 1) {
+                            clearInterval(timer);
+                            onEnd(score);
+                            return 0;
+                        }
+                        return t - 1;
+                    });
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [score, onEnd]);
+
+            const hitTarget = () => {
+                setScore(s => s + 100);
+                setTarget({
+                    x: Math.random() * 80 + 10,
+                    y: Math.random() * 80 + 10
+                });
+            };
+
+            return (
+                <div className="relative w-full h-64 bg-stone-800 rounded-xl overflow-hidden border-2 border-red-900 shadow-inner">
+                    <div className="absolute top-2 left-2 text-white font-mono bg-black/50 px-2 rounded">Time: {timeLeft}s</div>
+                    <div className="absolute top-2 right-2 text-white font-mono bg-black/50 px-2 rounded">Score: {score}</div>
+                    
+                    <button 
+                        onClick={hitTarget}
+                        style={{ top: `${target.y}%`, left: `${target.x}%` }}
+                        className="absolute w-12 h-12 transform -translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full border-4 border-white flex items-center justify-center shadow-lg active:scale-90 transition-transform target-appear hover:bg-red-500 cursor-crosshair"
+                    >
+                        <Icons.Crosshair size={24} className="text-white" />
+                    </button>
+                    
+                    {timeLeft === 0 && (
+                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center text-white">
+                            <h3 className="text-2xl font-bold">Training Over!</h3>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- MAIN COMPONENT ---
+        function JadeMountainAcademy() {
+            const [user, setUser] = useState(null);
+            const [currentLocation, setCurrentLocation] = useState('great_hall');
+            const [messages, setMessages] = useState([{ id: 0, sender: 'Sunny', text: "Welcome to Jade Mountain Academy!!", type: 'npc' }]);
+            const [inputText, setInputText] = useState('');
+            const [activeTab, setActiveTab] = useState('chat');
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [activeCall, setActiveCall] = useState(null);
+            const [showInstallHelp, setShowInstallHelp] = useState(false);
+            const [installPrompt, setInstallPrompt] = useState(null);
+            
+            // Activities State
+            const [lessonActive, setLessonActive] = useState(false); // History
+            const [battleActive, setBattleActive] = useState(false); // Arena
+            const [libraryActive, setLibraryActive] = useState(false); // Library
+            
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [quizScore, setQuizScore] = useState(0);
+            
+            const [isListening, setIsListening] = useState(false);
+            const isListeningRef = useRef(false); // Ref for robust mic tracking
+            const chatEndRef = useRef(null);
+            const recognitionRef = useRef(null);
+
+            // Listen for native install prompt
+            useEffect(() => {
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    setInstallPrompt(e);
+                });
+            }, []);
+
+            // Profile & Progress Saver Logic
+            useEffect(() => {
+                const savedData = localStorage.getItem('jma_data');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.user) {
+                        parsed.user.tribe = TRIBES.find(t => t.id === parsed.user.tribe.id);
+                        setUser(parsed.user);
+                    }
+                    if (parsed.location) {
+                        setCurrentLocation(parsed.location);
+                    }
+                }
+            }, []);
+
+            useEffect(() => {
+                if (user) {
+                    localStorage.setItem('jma_data', JSON.stringify({
+                        user: user,
+                        location: currentLocation
+                    }));
+                }
+            }, [user, currentLocation]);
+
+            // Scroll Logic
+            useEffect(() => {
+                // chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, [messages]);
+
+            // Microphone Logic (Improved)
+            const handleSendMessage = useCallback((e, overrideText = null) => {
+                if (e) e.preventDefault();
+                const text = overrideText || inputText;
+                if (!text || !text.trim()) return;
+                
+                setMessages(prev => {
+                     const lastMsg = prev[prev.length - 1];
+                     if (lastMsg && lastMsg.type === 'user' && lastMsg.text === text && (Date.now() - lastMsg.id < 1000)) return prev;
+                     return [...prev, { id: Date.now(), sender: 'You', text: text, type: 'user' }];
+                });
+                setInputText('');
+
+                setTimeout(() => {
+                    setMessages(prevMsgs => {
+                         const randomFriend = NPCS[Math.floor(Math.random() * NPCS.length)];
+                         const responseText = getResponse(randomFriend.id, text, 'chat');
+                         return [...prevMsgs, { 
+                            id: Date.now() + 1, 
+                            sender: randomFriend.name, 
+                            text: responseText, 
+                            type: 'npc', 
+                            avatarColor: randomFriend.avatarColor,
+                            avatarImage: randomFriend.avatarImage
+                         }];
+                    });
+                }, 1500);
+            }, [inputText]);
+
+            useEffect(() => {
+                if (isListening) {
+                    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                        alert("Speech recognition not supported.");
+                        setIsListening(false);
+                        isListeningRef.current = false;
+                        return;
+                    }
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = false;
+                    recognition.lang = 'en-US';
+                    
+                    recognition.onresult = (event) => {
+                        const last = event.results.length - 1;
+                        const text = event.results[last][0].transcript;
+                        handleSendMessage(null, text);
+                    };
+
+                    recognition.onerror = (e) => {
+                        console.log("Mic error, auto-recovering:", e.error);
+                        // Only hard stop on not-allowed, otherwise try to ignore
+                        if (e.error === 'not-allowed') {
+                            setIsListening(false);
+                            isListeningRef.current = false;
+                        }
+                    };
+                    
+                    recognition.onend = () => {
+                        // ROBUST RESTART: If we still think we are listening, restart!
+                        if (isListeningRef.current) {
+                           console.log("Mic ended, restarting...");
+                           try { recognition.start(); } catch(e){ console.log("Restart failed", e); }
+                        }
+                    };
+
+                    recognitionRef.current = recognition;
+                    recognition.start();
+                } else {
+                    if (recognitionRef.current) {
+                        recognitionRef.current.stop();
+                        recognitionRef.current = null;
+                    }
+                }
+                return () => {
+                     if (recognitionRef.current) recognitionRef.current.stop();
+                };
+            }, [isListening, handleSendMessage]);
+
+            const toggleListening = () => {
+                const newState = !isListening;
+                setIsListening(newState);
+                isListeningRef.current = newState; // Sync ref immediately
+            };
+
+            const handleLogin = (name, tribeId, avatarConfig) => {
+                const newUser = { 
+                    name, 
+                    tribe: TRIBES.find(t => t.id === tribeId),
+                    avatar: avatarConfig
+                };
+                setUser(newUser);
+                localStorage.setItem('jma_data', JSON.stringify({ user: newUser, location: 'great_hall' }));
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('jma_data');
+                setUser(null);
+                setMessages([{ id: 0, sender: 'Sunny', text: "Welcome to Jade Mountain Academy!!", type: 'npc' }]);
+                setCurrentLocation('great_hall');
+                setIsListening(false);
+                isListeningRef.current = false;
+            };
+
+            const changeLocation = (locId) => {
+                setCurrentLocation(locId);
+                const locName = LOCATIONS.find(l => l.id === locId).name;
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'System', text: `You entered ${locName}.`, type: 'system' }]);
+                setIsSidebarOpen(false);
+                setLessonActive(false);
+                setBattleActive(false);
+                setLibraryActive(false);
+            };
+
+            const startVideoCall = (npc) => {
+                setActiveCall({ partner: npc });
+                setIsSidebarOpen(false);
+                const greeting = getResponse(npc.id, "hello", 'video');
+                setMessages(prev => [...prev, { 
+                    id: Date.now(), 
+                    sender: npc.name, 
+                    text: greeting, 
+                    type: 'npc', 
+                    avatarColor: npc.avatarColor,
+                    avatarImage: npc.avatarImage 
+                }]);
+            };
+
+            const instantRandomCall = () => {
+                const randomFriend = NPCS[Math.floor(Math.random() * NPCS.length)];
+                startVideoCall(randomFriend);
+            };
+
+            const handleInstallApp = () => {
+                if (installPrompt) {
+                    installPrompt.prompt();
+                    installPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            setInstallPrompt(null);
+                        }
+                    });
+                } else {
+                    setShowInstallHelp(true);
+                }
+            };
+
+            const triggerWingletChat = () => {
+                const scenarios = [
+                    [
+                        { sender: 'Clay', text: "I'm so hungry. Tsunami, did you eat the rest of the hippos?" },
+                        { sender: 'Tsunami', text: "No! I've been busy saving the world, unlike some dragons who just think about food." },
+                        { sender: 'Clay', text: "Saving the world takes energy! I need a snack." },
+                        { sender: 'Tsunami', text: "Fine. Let's go to the prey center. But I'm flying point." }
+                    ],
+                    [
+                        { sender: 'Tsunami', text: "I bet I can swim faster than you can fly, Clay." },
+                        { sender: 'Clay', text: "Probably. But can you hold your breath longer than I can hold a nap?" },
+                        { sender: 'Tsunami', text: "That's not a skill! That's laziness!" },
+                        { sender: 'Clay', text: "It's a tactical energy conservation strategy." }
+                    ],
+                    [
+                        { sender: 'Glory', text: "Tsunami, stop splashing in the underground lake. You're getting the scrolls wet." },
+                        { sender: 'Tsunami', text: "It's a lake, Glory. It's wet. Deal with it." },
+                        { sender: 'Glory', text: "If Starflight sees a damp scroll, he's going to have a panic attack." },
+                        { sender: 'Tsunami', text: "Fine. I'll splash quietly. But only because I want to." }
+                    ],
+                    [
+                        { sender: 'Starflight', text: "I've calculated the probability of the volcano erupting again..." },
+                        { sender: 'Sunny', text: "Starflight! No more doom and gloom! Look at this pretty flower!" },
+                        { sender: 'Starflight', text: "But the geological pressure variance..." },
+                        { sender: 'Sunny', text: "Flower! Happy thoughts!" }
+                    ],
+                    [
+                        { sender: 'Clay', text: "Do you think the prey center is open late tonight?" },
+                        { sender: 'Sunny', text: "Clay, you just ate an entire cow." },
+                        { sender: 'Clay', text: "That was a snack cow. Now I need a dinner cow." },
+                        { sender: 'Sunny', text: "I'll go ask the kitchen... but you owe me!" }
+                    ]
+                ];
+
+                const convo = scenarios[Math.floor(Math.random() * scenarios.length)];
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'System', text: "Listening in on Winglet conversation...", type: 'system' }]);
+
+                let delay = 1000;
+                convo.forEach(line => {
+                    setTimeout(() => {
+                        const npc = NPCS.find(n => n.name === line.sender);
+                        setMessages(prev => [...prev, {
+                            id: Date.now(),
+                            sender: npc.name,
+                            text: line.text,
+                            type: 'npc',
+                            avatarColor: npc.avatarColor,
+                            avatarImage: npc.avatarImage
+                        }]);
+                    }, delay);
+                    delay += 2500;
+                });
+            };
+
+            // --- ACTIVITY LOGIC ---
+            
+            // HISTORY
+            const startHistoryQuiz = () => {
+                setLessonActive(true);
+                setCurrentQuestion(0);
+                setQuizScore(0);
+                const intro = "Alright class! Today we are testing your knowledge of Pyrrhian History. First question...";
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'Webs', text: intro, type: 'npc', avatarColor: 'bg-cyan-800' }]);
+                speakText(intro);
+            };
+
+            const handleHistoryAnswer = (option) => {
+                const correct = option === QUIZ_QUESTIONS[currentQuestion].answer;
+                if (correct) setQuizScore(s => s + 1);
+                const feedback = correct ? "Correct! Excellent work." : `Not quite. The answer was ${QUIZ_QUESTIONS[currentQuestion].answer}.`;
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'Webs', text: feedback, type: 'npc', avatarColor: 'bg-cyan-800' }]);
+                if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
+                    setTimeout(() => setCurrentQuestion(q => q + 1), 1500);
+                } else {
+                    setTimeout(() => {
+                        const finalMsg = `Class dismissed! You got ${correct ? quizScore + 1 : quizScore} out of ${QUIZ_QUESTIONS.length} correct.`;
+                        setMessages(prev => [...prev, { id: Date.now(), sender: 'Webs', text: finalMsg, type: 'npc', avatarColor: 'bg-cyan-800' }]);
+                        setLessonActive(false);
+                    }, 2000);
+                }
+            };
+
+            // BATTLE
+            const startBattle = () => {
+                setBattleActive(true);
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'Tsunami', text: "Alright, let's see if you can fight like a SeaWing! Hit the targets, fast!", type: 'npc', avatarColor: 'bg-cyan-600', avatarImage: NPCS.find(n=>n.id==='tsunami').avatarImage }]);
+            };
+            
+            const endBattle = (score) => {
+                setBattleActive(false);
+                let feedback = "Not bad... for a land dragon.";
+                if (score > 1000) feedback = "Okay, that was actually impressive. You fight like a SkyWing!";
+                if (score > 2000) feedback = "THREE MOONS! That was incredible! You're definitely ready for the prophecy!";
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'Tsunami', text: `Time's up! Score: ${score}. ${feedback}`, type: 'npc', avatarColor: 'bg-cyan-600', avatarImage: NPCS.find(n=>n.id==='tsunami').avatarImage }]);
+            };
+
+            // LIBRARY
+            const startLibrary = () => {
+                setLibraryActive(true);
+                setMessages(prev => [...prev, { id: Date.now(), sender: 'Starflight', text: "I need help organizing these scrolls. Click the 'History' scroll!", type: 'npc', avatarColor: 'bg-indigo-900' }]);
+            };
+
+            const handleLibraryClick = (scroll) => {
+                if (scroll.category === 'History') {
+                    setMessages(prev => [...prev, { id: Date.now(), sender: 'Starflight', text: "Perfect! Thank you for the help.", type: 'npc', avatarColor: 'bg-indigo-900' }]);
+                } else {
+                    setMessages(prev => [...prev, { id: Date.now(), sender: 'Starflight', text: "Hmm, that belongs in the " + scroll.category + " section.", type: 'npc', avatarColor: 'bg-indigo-900' }]);
+                }
+                setTimeout(() => setLibraryActive(false), 1000);
+            };
+
+
+            if (!user) return <LoginScreen onJoin={handleLogin} />;
+
+            const currentLocData = LOCATIONS.find(l => l.id === currentLocation);
+
+            return (
+                <div className="flex h-screen bg-transparent text-stone-100 font-sans overflow-hidden">
+                    
+                    {/* Install Help Modal */}
+                    {showInstallHelp && (
+                        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6" onClick={() => setShowInstallHelp(false)}>
+                            <div className="bg-stone-100 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-stone-200" onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xl font-bold text-stone-800 flex items-center gap-2"><Icons.Download size={20}/> Install App</h3>
+                                    <button onClick={() => setShowInstallHelp(false)} className="text-stone-400 hover:text-stone-600"><Icons.X /></button>
+                                </div>
+                                <div className="space-y-4 text-stone-600">
+                                    <p>Turn this website into a real app on your phone!</p>
+                                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                                        <p className="font-bold mb-2 text-stone-800">On iPhone (Safari):</p>
+                                        <ol className="list-decimal pl-5 space-y-1 text-sm">
+                                            <li>Tap the <strong>Share</strong> button (box with arrow).</li>
+                                            <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+                                        </ol>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                                        <p className="font-bold mb-2 text-stone-800">On Android (Chrome):</p>
+                                        <ol className="list-decimal pl-5 space-y-1 text-sm">
+                                            <li>Tap the <strong>Menu</strong> (three dots).</li>
+                                            <li>Tap <strong>Install App</strong> or <strong>Add to Home Screen</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Video Call Overlay */}
+                    {activeCall && (
+                        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+                            {/* DYNAMIC AGENT LOADER: If the NPC has an agentUrl, load the iframe. If not, load the internal React Video Call. */}
+                            {activeCall.partner.agentUrl ? (
+                                <div className="relative w-full h-full max-w-4xl bg-white rounded-lg overflow-hidden flex flex-col shadow-2xl safe-top safe-bottom">
+                                    <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/50 to-transparent z-40 pointer-events-none"></div>
+                                    <button 
+                                        onClick={() => setActiveCall(null)} 
+                                        className="absolute top-4 right-4 z-50 p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 hover:scale-110 transition-transform"
+                                        title="End Call"
+                                    >
+                                        <Icons.X />
+                                    </button>
+                                    <iframe 
+                                      id={`JotFormIFrame-${activeCall.partner.id}`}
+                                      title={activeCall.partner.name}
+                                      onLoad={() => window.parent.scrollTo(0,0)} 
+                                      allowTransparency="true" 
+                                      allow="geolocation; microphone; camera; fullscreen" 
+                                      src={activeCall.partner.agentUrl}
+                                      frameBorder="0" 
+                                      style={{ minWidth: '100%', height: '100%', border: 'none' }} 
+                                      scrolling="no" 
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-full max-w-2xl bg-stone-800 rounded-2xl overflow-hidden shadow-2xl border border-stone-700 flex flex-col h-[600px] safe-top safe-bottom">
+                                    <div className="bg-stone-900 p-4 flex justify-between items-center text-white">
+                                        <div className="flex items-center gap-2">
+                                            <Icons.Sparkles className="text-emerald-400" size={18} />
+                                            <span className="font-semibold tracking-wide">Dream Visitor Connected</span>
+                                        </div>
+                                        <div className="text-xs text-emerald-400 font-bold uppercase tracking-widest">Live</div>
+                                    </div>
+                                    <div className={`flex-1 relative flex items-center justify-center ${activeCall.partner.avatarColor} bg-opacity-20`}>
+                                        <div className="absolute inset-0 bg-black/40"></div>
+                                        <div className="relative z-10 flex flex-col items-center animate-bounce-slow">
+                                            <div className={`w-32 h-32 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl flex items-center justify-center bg-stone-800`}>
+                                                {activeCall.partner.avatarImage ? (
+                                                    <img src={activeCall.partner.avatarImage} alt={activeCall.partner.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-6xl text-white font-bold">{activeCall.partner.name[0]}</span>
+                                                )}
+                                            </div>
+                                            <h2 className="mt-4 text-2xl font-bold text-white tracking-wider">{activeCall.partner.name}</h2>
+                                            <p className="text-white/70 text-sm">{activeCall.partner.tribe}</p>
+                                            
+                                            {/* Simulated Speaking Indicator */}
+                                            {messages[messages.length-1].sender === activeCall.partner.name && (
+                                                <div className="mt-2 flex gap-1">
+                                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                                    <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                                </div>
+                                            )}
+
+                                            {isListening && <div className="mt-4 flex items-center gap-2 bg-red-500/80 px-4 py-1 rounded-full text-white text-sm animate-pulse"><div className="w-2 h-2 bg-white rounded-full"></div>Listening...</div>}
+                                        </div>
+                                        <div className="absolute bottom-8 left-8 right-8 bg-black/60 backdrop-blur-md p-4 rounded-xl text-center">
+                                            <p className="text-white text-lg font-medium">"{messages[messages.length-1].sender === activeCall.partner.name ? messages[messages.length-1].text : '...'}"</p>
+                                        </div>
+                                        <div className="absolute top-4 right-4 w-32 h-48 bg-stone-900 rounded-lg border-2 border-stone-700 overflow-hidden shadow-xl">
+                                            <div className="w-full h-full bg-stone-800 flex items-center justify-center">
+                                                <DragonAvatar tribe={user.tribe} custom={user.avatar} size="lg" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-stone-900 p-6 flex justify-center gap-6">
+                                        <button onClick={toggleListening} className={`p-4 rounded-full transition relative ${isListening ? 'bg-red-500 text-white animate-pulse-ring' : 'bg-stone-700 text-white hover:bg-stone-600'}`}>{isListening ? <Icons.Mic size={24}/> : <Icons.MicOff size={24}/>}</button>
+                                        <button onClick={() => { setActiveCall(null); window.speechSynthesis.cancel(); setIsListening(false); isListeningRef.current=false; }} className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition"><Icons.PhoneOff size={24}/></button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Sidebar */}
+                    <div className={`fixed inset-y-0 left-0 w-64 bg-stone-800/90 backdrop-blur-md text-stone-100 transform transition-transform duration-300 z-30 md:relative md:translate-x-0 border-r border-stone-700 safe-top safe-bottom ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <div className="p-6 border-b border-stone-700 flex justify-between items-center bg-stone-900/50">
+                            <div><h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-200">Jade Mountain</h1><p className="text-xs text-stone-400">Academy Portal</p></div>
+                            <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-stone-400"><Icons.X size={20}/></button>
+                        </div>
+                        <div className="p-4 flex flex-col h-[calc(100%-80px)] overflow-y-auto">
+                            <div className="flex items-center gap-3 p-3 bg-stone-700/50 rounded-lg mb-6 border border-stone-600">
+                                <DragonAvatar tribe={user.tribe} custom={user.avatar} size="sm" />
+                                <div><p className="font-bold text-sm">{user.name}</p><p className="text-xs text-stone-400">{user.tribe.name} Student</p></div>
+                            </div>
+                            <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 px-2">Menu</p>
+                            <button onClick={() => { setActiveTab('winglet'); setIsSidebarOpen(false); }} className={`w-full text-left p-2 rounded-md flex items-center gap-2 mb-4 ${activeTab === 'winglet' ? 'bg-emerald-900/50 text-emerald-200' : 'hover:bg-stone-700'}`}><Icons.Users size={16} /> The Winglet</button>
+                            <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 px-2">Locations</p>
+                            <nav className="space-y-1 flex-1 overflow-y-auto">
+                                {LOCATIONS.map(loc => (
+                                    <button key={loc.id} onClick={() => changeLocation(loc.id)} className={`w-full text-left p-2 rounded-md flex items-center gap-2 ${currentLocation === loc.id ? 'bg-stone-700 text-white' : 'text-stone-400 hover:bg-stone-700'}`}><loc.icon size={16} />{loc.name}</button>
+                                ))}
+                            </nav>
+                            
+                            <button onClick={handleInstallApp} className="mt-4 w-full p-2 rounded-md flex items-center gap-2 bg-emerald-700/80 text-white hover:bg-emerald-600/80 transition-colors border border-emerald-600 shadow-lg"><Icons.Download size={16} /> Install App</button>
+                            
+                            <button onClick={handleLogout} className="mt-2 w-full p-2 rounded-md flex items-center gap-2 text-stone-400 hover:bg-red-900/30 hover:text-red-400 transition-colors"><Icons.LogOut size={16} /> Fly Away (Logout)</button>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col h-full relative">
+                        <header className="h-16 bg-white/90 backdrop-blur border-b border-stone-200 flex items-center justify-between px-4 shadow-sm z-10 safe-top">
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 hover:bg-stone-100 rounded-md"><Icons.Menu size={20} /></button>
+                                <div className="flex items-center gap-2"><currentLocData.icon className="text-stone-500" /><h2 className="text-lg font-bold text-stone-800">{currentLocData.name}</h2></div>
+                            </div>
+                            <div className="flex gap-2">
+                                {/* Winglet Chatter Button */}
+                                <button onClick={triggerWingletChat} className="p-2 rounded-md hover:bg-emerald-50 text-emerald-600 mr-1 flex items-center gap-1 font-medium text-xs md:text-sm border border-emerald-100" title="Listen to Winglet Conversation"><Icons.Ear size={18} /> <span className="hidden md:inline">Listen In</span></button>
+                                
+                                <button onClick={instantRandomCall} className="p-2 rounded-md hover:bg-indigo-50 text-indigo-600 mr-2 flex items-center gap-1 font-medium text-xs md:text-sm" title="Quick Call Random Winglet Member"><Icons.PhoneCall size={20} /> <span className="hidden md:inline">Quick Call</span></button>
+                                <button onClick={() => setActiveTab('chat')} className={`p-2 rounded-md ${activeTab === 'chat' ? 'bg-emerald-100 text-emerald-800' : 'hover:bg-stone-100'}`}><Icons.MessageCircle size={20} /></button>
+                                <button onClick={() => setActiveTab('winglet')} className={`p-2 rounded-md ${activeTab === 'winglet' ? 'bg-emerald-100 text-emerald-800' : 'hover:bg-stone-100'}`}><Icons.Users size={20} /></button>
+                            </div>
+                        </header>
+
+                        <div className={`flex-1 overflow-hidden relative ${currentLocData.bg} transition-colors duration-500`}>
+                            {activeTab === 'chat' && (
+                                <div className="h-full flex flex-col max-w-4xl mx-auto bg-white/85 backdrop-blur-sm shadow-xl border-x border-stone-200">
+                                    
+                                    {/* Location Specific Headers/Games */}
+                                    
+                                    {/* History Cave */}
+                                    {currentLocation === 'history_cave' && !lessonActive && (
+                                        <div className="p-4 bg-cyan-50 border-b border-cyan-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-full bg-cyan-800 flex items-center justify-center text-white font-bold">W</div><div><p className="font-bold text-cyan-900">History with Webs</p><p className="text-xs text-cyan-700">Class is open for quizzes.</p></div></div>
+                                            <button onClick={startHistoryQuiz} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium flex items-center gap-2 text-sm shadow-sm transition"><Icons.GraduationCap size={16} /> Start Quiz</button>
+                                        </div>
+                                    )}
+
+                                    {/* Arena */}
+                                    {currentLocation === 'arena' && !battleActive && (
+                                        <div className="p-4 bg-red-100 border-b border-red-200 flex items-center justify-between">
+                                            <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-full bg-cyan-600 flex items-center justify-center text-white font-bold">T</div><div><p className="font-bold text-cyan-900">Battle Training</p><p className="text-xs text-cyan-700">Test your reflexes.</p></div></div>
+                                            <button onClick={startBattle} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium flex items-center gap-2 text-sm shadow-sm transition"><Icons.Swords size={16} /> Start Training</button>
+                                        </div>
+                                    )}
+
+                                    {/* Library */}
+                                    {currentLocation === 'library' && !libraryActive && (
+                                        <div className="p-4 bg-amber-100 border-b border-amber-200 flex items-center justify-between">
+                                            <div className="flex items-center gap-3"><div className="w-12 h-12 rounded-full bg-indigo-900 flex items-center justify-center text-white font-bold">S</div><div><p className="font-bold text-indigo-900">Library Duty</p><p className="text-xs text-indigo-700">Help Starflight sort scrolls.</p></div></div>
+                                            <button onClick={startLibrary} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center gap-2 text-sm shadow-sm transition"><Icons.BookOpen size={16} /> Sort Scrolls</button>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Art Cave */}
+                                     {currentLocation === 'art_cave' && (
+                                        <div className="p-4 bg-pink-100 border-b border-pink-200 flex items-center gap-3">
+                                            <Icons.Palette className="text-pink-600" />
+                                            <p className="text-sm text-pink-800 italic">"There are no mistakes, just happy little scales." - An old scavenger proverb.</p>
+                                        </div>
+                                    )}
+
+
+                                    {/* GAME INTERFACES */}
+                                    
+                                    {/* Quiz Game */}
+                                    {lessonActive && (
+                                        <div className="p-6 bg-cyan-900 text-white m-4 rounded-xl shadow-lg border border-cyan-700">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="font-bold text-lg flex items-center gap-2"><Icons.History size={20} /> Question {currentQuestion + 1} of {QUIZ_QUESTIONS.length}</h3>
+                                                <span className="bg-cyan-800 px-3 py-1 rounded-full text-xs font-mono">Score: {quizScore}</span>
+                                            </div>
+                                            <p className="text-xl mb-6 font-serif leading-relaxed">"{QUIZ_QUESTIONS[currentQuestion].question}"</p>
+                                            <div className="grid gap-3">
+                                                {QUIZ_QUESTIONS[currentQuestion].options.map(opt => (
+                                                    <button key={opt} onClick={() => handleHistoryAnswer(opt)} className="w-full text-left p-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition-colors flex items-center gap-3">
+                                                        <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center text-xs">?</div>
+                                                        {opt}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Battle Game */}
+                                    {battleActive && (
+                                        <div className="m-4">
+                                            <BattleGame onEnd={endBattle} />
+                                        </div>
+                                    )}
+
+                                    {/* Library Game */}
+                                    {libraryActive && (
+                                        <div className="p-6 bg-amber-900 text-amber-100 m-4 rounded-xl shadow-lg border border-amber-700">
+                                            <p className="mb-4 font-serif text-lg">Which scroll should go in the <strong>History</strong> section?</p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {SCROLL_TITLES.map(scroll => (
+                                                    <button key={scroll.id} onClick={() => handleLibraryClick(scroll)} className="p-4 bg-amber-100 text-amber-900 rounded-lg shadow hover:bg-white transition text-sm font-bold flex flex-col items-center text-center">
+                                                        <Icons.Scroll className="mb-2 text-amber-700" />
+                                                        {scroll.title}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                        {messages.map((msg) => (
+                                            <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                {msg.type === 'npc' && (
+                                                    msg.avatarImage ? 
+                                                    <img src={msg.avatarImage} alt={msg.sender} className="w-8 h-8 rounded-full flex-shrink-0 mr-2 object-cover shadow-sm bg-stone-200" onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='flex'}} /> :
+                                                    <div className={`w-8 h-8 rounded-full flex-shrink-0 mr-2 flex items-center justify-center text-white text-xs font-bold shadow-sm ${msg.avatarColor || 'bg-stone-400'}`}>{msg.sender[0]}</div>
+                                                )}
+                                                
+                                                <div className={`max-w-[80%] rounded-2xl px-4 py-2 shadow-sm text-sm ${msg.type === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : msg.type === 'system' ? 'bg-stone-200 text-stone-600 text-xs italic w-full text-center shadow-none' : 'bg-white border border-stone-200 text-stone-800 rounded-bl-none'}`}>{msg.text}</div>
+                                            </div>
+                                        ))}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    
+                                    {!lessonActive && !battleActive && !libraryActive && (
+                                        <div className="p-4 bg-white border-t border-stone-200 safe-bottom">
+                                            <form onSubmit={handleSendMessage} className="flex gap-2">
+                                                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Say something..." className="flex-1 px-4 py-2 border border-stone-300 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-stone-50" />
+                                                <button type="submit" className="p-2 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-colors shadow-sm"><Icons.Send size={20} /></button>
+                                            </form>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'winglet' && (
+                                <div className="h-full overflow-y-auto p-6 max-w-3xl mx-auto safe-bottom">
+                                    <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-8 border border-stone-200">
+                                        <div className="flex items-center gap-4 mb-6 border-b border-stone-100 pb-4">
+                                            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-red-500 rounded-xl flex items-center justify-center text-white shadow-lg"><Icons.Flame size={32} /></div>
+                                            <div><h2 className="text-2xl font-bold text-stone-800">The Destiny Winglet</h2><p className="text-stone-500">Connect with your friends.</p></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {NPCS.map(npc => (
+                                                <div key={npc.id} className="bg-stone-50 border border-stone-100 p-4 rounded-xl flex items-center justify-between hover:shadow-md transition-shadow">
+                                                    <div className="flex items-center gap-4">
+                                                        {npc.avatarImage ? (
+                                                            <div className="w-12 h-12 rounded-full overflow-hidden shadow border-2 border-white/20 bg-stone-200">
+                                                                <img src={npc.avatarImage} alt={npc.name} className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className={`w-12 h-12 rounded-full ${npc.avatarColor} text-white flex items-center justify-center shadow`}><span className="font-bold text-lg">{npc.name[0]}</span></div>
+                                                        )}
+                                                        <div><h3 className="font-bold text-stone-800">{npc.name}</h3><p className="text-xs text-stone-500 uppercase font-semibold">{npc.tribe}</p></div>
+                                                    </div>
+                                                    <button onClick={() => startVideoCall(npc)} className="p-2 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition"><Icons.Video size={18} /></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function LoginScreen({ onJoin }) {
+            const [name, setName] = useState('');
+            const [selectedTribe, setSelectedTribe] = useState(TRIBES[0].id);
+            const [selectedEyeColor, setSelectedEyeColor] = useState(EYE_COLORS[0].id);
+            const [selectedAccessory, setSelectedAccessory] = useState(ACCESSORIES[0].id);
+
+            const activeTribe = TRIBES.find(t => t.id === selectedTribe);
+
+            const handleJoinClick = (e) => {
+                e.preventDefault();
+                if(name.trim()) {
+                    onJoin(name, selectedTribe, {
+                        eyeColor: EYE_COLORS.find(c => c.id === selectedEyeColor).hex,
+                        accessory: selectedAccessory
+                    });
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-stone-900 to-emerald-950 safe-top safe-bottom">
+                    <div className="relative bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+                        <div className={`${activeTribe.color} p-8 md:w-1/3 flex flex-col justify-between text-white transition-colors duration-500`}>
+                            <div><div className="flex items-center gap-2 mb-6 opacity-80"><Icons.Scroll size={20} /><span className="text-sm font-semibold tracking-widest uppercase">Pyrrhia Enrollment</span></div><h1 className="text-4xl font-extrabold mb-4 leading-tight">Jade Mountain Academy</h1><p className="text-white/80 leading-relaxed">Welcome, dragonet. Destiny is calling.</p></div>
+                            
+                            <div className="flex justify-center my-8">
+                                <DragonAvatar 
+                                    tribe={activeTribe} 
+                                    custom={{ eyeColor: EYE_COLORS.find(c => c.id === selectedEyeColor).hex, accessory: selectedAccessory }} 
+                                    size="lg" 
+                                />
+                            </div>
+
+                            <div><div className="flex items-center gap-3 mb-2"><activeTribe.icon size={32} /><h2 className="text-2xl font-bold">{activeTribe.name}</h2></div><p className="text-sm text-white/90">{activeTribe.description}</p></div>
+                        </div>
+                        <div className="p-8 md:w-2/3 flex flex-col justify-center bg-stone-50 overflow-y-auto">
+                            <h2 className="text-2xl font-bold text-stone-800 mb-6">Create Student Profile</h2>
+                            <form onSubmit={handleJoinClick} className="space-y-6">
+                                <div><label className="block text-sm font-medium text-stone-500 mb-1">Dragon Name</label><input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Moonwatcher, Qibli..." className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-emerald-500 outline-none transition-all bg-white" /></div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-stone-500 mb-3">Select Tribe</label>
+                                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                                        {TRIBES.map(tribe => (
+                                            <button key={tribe.id} type="button" onClick={() => setSelectedTribe(tribe.id)} className={`p-2 rounded-lg flex flex-col items-center justify-center gap-1 border-2 transition-all ${selectedTribe === tribe.id ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-transparent bg-white hover:bg-stone-100 text-stone-400'}`}>
+                                                <tribe.icon size={20} />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-500 mb-3">Eye Color</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {EYE_COLORS.map(color => (
+                                                <button key={color.id} type="button" onClick={() => setSelectedEyeColor(color.id)} style={{ backgroundColor: color.hex }} className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${selectedEyeColor === color.id ? 'border-stone-800 scale-110 shadow-md' : 'border-white'}`} title={color.name}></button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-500 mb-3">Accessory</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {ACCESSORIES.map(acc => (
+                                                <button key={acc.id} type="button" onClick={() => setSelectedAccessory(acc.id)} className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${selectedAccessory === acc.id ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-stone-200 bg-white text-stone-400'}`} title={acc.name}>
+                                                    {acc.icon ? <acc.icon size={20} /> : <span className="text-xs">None</span>}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-white ${activeTribe.color} brightness-110`}>Enter Academy</button>
+                                
+                                <div className="text-center mt-4">
+                                    <a href="#" className="text-xs text-stone-400 hover:underline">Privacy Policy</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<JadeMountainAcademy />);
+    </script>
+</body>
+</html>
+
+
